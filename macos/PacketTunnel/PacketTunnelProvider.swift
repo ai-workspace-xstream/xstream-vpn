@@ -143,7 +143,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       return data
     }
     guard
-      let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      var root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
       var inbounds = root["inbounds"] as? [[String: Any]]
     else {
       return data
@@ -151,6 +151,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     let normalizedTunnelInterface = normalizeUtunInterfaceName(tunnelInterfaceName)
     var updated = false
+    var hasTunInbound = false
     for index in inbounds.indices {
       guard
         let protocolName = inbounds[index]["protocol"] as? String,
@@ -159,6 +160,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       else {
         continue
       }
+      hasTunInbound = true
 
       for key in ["interfaceName", "name", "interface"] {
         guard let raw = settings[key] as? String else {
@@ -186,13 +188,134 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       inbounds[index]["settings"] = settings
     }
 
+    root["inbounds"] = inbounds
+    if hasTunInbound {
+      updated = sanitizeProxyTransportCapabilities(root: &root) || updated
+      updated = ensureQuicProtocolBlockRule(root: &root) || updated
+    }
+
     guard updated else {
       return data
     }
 
-    var patched = root
-    patched["inbounds"] = inbounds
-    return (try? JSONSerialization.data(withJSONObject: patched)) ?? data
+    return (try? JSONSerialization.data(withJSONObject: root)) ?? data
+  }
+
+  private func sanitizeProxyTransportCapabilities(root: inout [String: Any]) -> Bool {
+    guard var outbounds = root["outbounds"] as? [[String: Any]] else {
+      return false
+    }
+
+    var updated = false
+    for outboundIndex in outbounds.indices {
+      guard
+        (outbounds[outboundIndex]["protocol"] as? String)?.lowercased() == "vless",
+        let streamSettings = outbounds[outboundIndex]["streamSettings"] as? [String: Any],
+        var settings = outbounds[outboundIndex]["settings"] as? [String: Any],
+        var vnext = settings["vnext"] as? [[String: Any]],
+        !vnext.isEmpty,
+        var users = vnext[0]["users"] as? [[String: Any]],
+        !users.isEmpty
+      else {
+        continue
+      }
+
+      let network = (streamSettings["network"] as? String)?.lowercased()
+      let security = (streamSettings["security"] as? String)?.lowercased()
+      let supportsVisionFlow = network == "tcp" && security == "tls"
+      if !supportsVisionFlow && users[0]["flow"] != nil {
+        users[0].removeValue(forKey: "flow")
+        vnext[0]["users"] = users
+        settings["vnext"] = vnext
+        outbounds[outboundIndex]["settings"] = settings
+        updated = true
+      }
+    }
+
+    if updated {
+      root["outbounds"] = outbounds
+    }
+    return updated
+  }
+
+  private func ensureQuicProtocolBlockRule(root: inout [String: Any]) -> Bool {
+    guard
+      var routing = root["routing"] as? [String: Any],
+      var rules = routing["rules"] as? [[String: Any]]
+    else {
+      return false
+    }
+
+    if rules.contains(where: isTunQuicProtocolBlockRule) {
+      return false
+    }
+    guard let udpBlockIndex = rules.firstIndex(where: isTunUdp443BlockRule) else {
+      return false
+    }
+
+    let protocolBlock: [String: Any] = [
+      "type": "field",
+      "inboundTag": ["tun-in"],
+      "protocol": ["quic"],
+      "outboundTag": "block",
+    ]
+    rules.insert(protocolBlock, at: rules.index(after: udpBlockIndex))
+    routing["rules"] = rules
+    root["routing"] = routing
+    return true
+  }
+
+  private func isTunUdp443BlockRule(_ rule: [String: Any]) -> Bool {
+    guard
+      (rule["type"] as? String) == "field",
+      (rule["outboundTag"] as? String) == "block",
+      ruleMatchesTunInbound(rule),
+      (rule["network"] as? String)?.lowercased() == "udp",
+      stringifyJsonScalar(rule["port"]) == "443"
+    else {
+      return false
+    }
+    return true
+  }
+
+  private func isTunQuicProtocolBlockRule(_ rule: [String: Any]) -> Bool {
+    guard
+      (rule["type"] as? String) == "field",
+      (rule["outboundTag"] as? String) == "block",
+      ruleMatchesTunInbound(rule)
+    else {
+      return false
+    }
+    if let protocols = rule["protocol"] as? [String] {
+      return protocols.map { $0.lowercased() }.contains("quic")
+    }
+    return false
+  }
+
+  private func ruleMatchesTunInbound(_ rule: [String: Any]) -> Bool {
+    guard let inboundTag = rule["inboundTag"] else {
+      return false
+    }
+    if let value = inboundTag as? String {
+      return value == "tun-in"
+    }
+    if let values = inboundTag as? [String] {
+      return values.contains("tun-in")
+    }
+    return false
+  }
+
+  private func stringifyJsonScalar(_ value: Any?) -> String? {
+    switch value {
+    case let value as String:
+      return value
+    case let value as NSNumber:
+      return value.stringValue
+    case let value as Int:
+      return String(value)
+    default:
+      return nil
+    }
   }
 
   private func shouldEnableIPv6(options: [String: NSObject], launchOptions: [String: NSObject]?)
