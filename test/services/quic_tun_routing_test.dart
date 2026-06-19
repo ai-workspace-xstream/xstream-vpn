@@ -28,6 +28,12 @@ bool _isQuicBlock(Map<String, dynamic> rule) =>
     rule['port'] == '443' &&
     rule['outboundTag'] == 'block';
 
+bool _isProtocolQuicBlock(Map<String, dynamic> rule) =>
+    rule['type'] == 'field' &&
+    rule['protocol'] is List &&
+    (rule['protocol'] as List).contains('quic') &&
+    rule['outboundTag'] == 'block';
+
 const _routePolicy = RoutePolicy(
   domainSets: DomainSets(
     direct: <String>[],
@@ -73,21 +79,30 @@ void main() {
       final rules = _secureRules(true);
 
       final blockIndex = rules.indexWhere(_isQuicBlock);
+      final protocolBlockIndex = rules.indexWhere(_isProtocolQuicBlock);
       final proxyIndex = rules.indexWhere(
         (rule) => rule['outboundTag'] == 'proxy',
       );
       expect(blockIndex, greaterThanOrEqualTo(0));
+      expect(protocolBlockIndex, greaterThanOrEqualTo(0));
       expect(blockIndex, lessThan(proxyIndex));
+      expect(protocolBlockIndex, lessThan(proxyIndex));
       expect(rules[blockIndex]['inboundTag'], <String>['tun-in']);
+      expect(rules[protocolBlockIndex]['inboundTag'], <String>['tun-in']);
     });
 
     test('omits UDP 443 block outside TUN mode', () {
       expect(_secureRules(false).where(_isQuicBlock), isEmpty);
+      expect(_secureRules(false).where(_isProtocolQuicBlock), isEmpty);
     });
 
     test('omits UDP 443 block when passthrough is enabled', () {
       expect(
         _secureRules(true, blockQuic: false).where(_isQuicBlock),
+        isEmpty,
+      );
+      expect(
+        _secureRules(true, blockQuic: false).where(_isProtocolQuicBlock),
         isEmpty,
       );
     });
@@ -97,6 +112,7 @@ void main() {
       expect(text, isNotNull);
       final config = _decode(text!);
       expect(_routingRules(config).where(_isQuicBlock), hasLength(1));
+      expect(_routingRules(config).where(_isProtocolQuicBlock), hasLength(1));
       expect(_proxyFlow(config), 'xtls-rprx-vision');
     });
 
@@ -108,6 +124,7 @@ void main() {
       final config = _decode(text!);
       expect(_proxyFlow(config), 'xtls-rprx-vision-udp443');
       expect(_routingRules(config).where(_isQuicBlock), isEmpty);
+      expect(_routingRules(config).where(_isProtocolQuicBlock), isEmpty);
     });
 
     test('keeps explicit udp443 flow when passthrough is enabled', () async {

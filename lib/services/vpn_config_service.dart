@@ -904,6 +904,7 @@ class VpnConfig {
       final outboundTag = rule['outboundTag'];
       final inboundTag = rule['inboundTag'];
       if (type == 'field' && outboundTag == 'block' && rule['network'] == 'udp' && rule['port'] == '443') return false;
+      if (type == 'field' && outboundTag == 'block' && rule['protocol'] is List && (rule['protocol'] as List).contains('quic')) return false;
       if (type == 'field' && outboundTag == 'proxy' && rule['port'] == '53') return false;
       if (type == 'field' && outboundTag == 'direct' && inboundTag is List && inboundTag.contains(_dnsDirectPrimaryTag)) return false;
       if (type == 'field' && outboundTag == 'proxy' && inboundTag is List && inboundTag.contains(_dnsProxyPrimaryTag)) return false;

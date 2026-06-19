@@ -153,7 +153,7 @@ class RoutePolicy {
           'port': '53',
           'outboundTag': 'proxy',
         },
-      if (enableTunnelMode && blockQuic)
+      if (enableTunnelMode && blockQuic) ...<Map<String, dynamic>>[
         <String, dynamic>{
           'type': 'field',
           'inboundTag': <String>[tunInboundTag],
@@ -161,6 +161,13 @@ class RoutePolicy {
           'port': '443',
           'outboundTag': 'block',
         },
+        <String, dynamic>{
+          'type': 'field',
+          'inboundTag': <String>[tunInboundTag],
+          'protocol': <String>['quic'],
+          'outboundTag': 'block',
+        },
+      ],
       if (domainSets.direct.isNotEmpty)
         <String, dynamic>{
           'type': 'field',
