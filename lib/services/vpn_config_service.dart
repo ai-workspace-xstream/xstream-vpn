@@ -641,7 +641,13 @@ class VpnConfig {
       firstVnext['users'] = users;
       firstUser['id'] = uuid;
       firstUser['encryption'] = 'none';
-      final effectiveFlow = DnsConfig.normalizeVisionFlow(flow);
+      final supportsVisionFlow = _supportsVisionFlow(
+        protocol: protocol,
+        network: normalizedNetwork,
+        security: normalizedSecurity,
+      );
+      final effectiveFlow =
+          supportsVisionFlow ? DnsConfig.normalizeVisionFlow(flow) : '';
       if (effectiveFlow.isNotEmpty) {
         firstUser['flow'] = effectiveFlow;
       } else {
@@ -692,6 +698,8 @@ class VpnConfig {
       jsonObj['routing'] = buildSecureDnsRoutingConfig(
         jsonObj['routing'],
         enableTunnelMode: enableTunnelMode,
+        forceBlockQuic: !(supportsVisionFlow &&
+            effectiveFlow.toLowerCase() == 'xtls-rprx-vision-udp443'),
       );
       if (DnsConfig.fakeDnsEnabled.value) {
         final fakeDnsConfig = _buildFakeDnsConfig();
@@ -903,13 +911,47 @@ class VpnConfig {
       final type = rule['type'];
       final outboundTag = rule['outboundTag'];
       final inboundTag = rule['inboundTag'];
-      if (type == 'field' && outboundTag == 'block' && rule['network'] == 'udp' && rule['port'] == '443') return false;
-      if (type == 'field' && outboundTag == 'block' && rule['protocol'] is List && (rule['protocol'] as List).contains('quic')) return false;
-      if (type == 'field' && outboundTag == 'proxy' && rule['port'] == '53') return false;
-      if (type == 'field' && outboundTag == 'direct' && inboundTag is List && inboundTag.contains(_dnsDirectPrimaryTag)) return false;
-      if (type == 'field' && outboundTag == 'proxy' && inboundTag is List && inboundTag.contains(_dnsProxyPrimaryTag)) return false;
-      if (type == 'field' && outboundTag == 'direct' && rule['ip'] != null && rule['ip'] is List && (rule['ip'] as List).contains('fc00::/7')) return false;
-      if (type == 'field' && outboundTag == 'direct' && rule['domain'] != null && rule['domain'] is List && (rule['domain'] as List).contains('full:localhost')) return false;
+      if (type == 'field' &&
+          outboundTag == 'block' &&
+          rule['network'] == 'udp' &&
+          rule['port'] == '443') {
+        return false;
+      }
+      if (type == 'field' &&
+          outboundTag == 'block' &&
+          rule['protocol'] is List &&
+          (rule['protocol'] as List).contains('quic')) {
+        return false;
+      }
+      if (type == 'field' && outboundTag == 'proxy' && rule['port'] == '53') {
+        return false;
+      }
+      if (type == 'field' &&
+          outboundTag == 'direct' &&
+          inboundTag is List &&
+          inboundTag.contains(_dnsDirectPrimaryTag)) {
+        return false;
+      }
+      if (type == 'field' &&
+          outboundTag == 'proxy' &&
+          inboundTag is List &&
+          inboundTag.contains(_dnsProxyPrimaryTag)) {
+        return false;
+      }
+      if (type == 'field' &&
+          outboundTag == 'direct' &&
+          rule['ip'] != null &&
+          rule['ip'] is List &&
+          (rule['ip'] as List).contains('fc00::/7')) {
+        return false;
+      }
+      if (type == 'field' &&
+          outboundTag == 'direct' &&
+          rule['domain'] != null &&
+          rule['domain'] is List &&
+          (rule['domain'] as List).contains('full:localhost')) {
+        return false;
+      }
       return true;
     }).toList();
 
@@ -935,15 +977,48 @@ class VpnConfig {
     return routing;
   }
 
-  static Map<String, dynamic> normalizeProxyOutboundFlow(Map<String, dynamic> proxyOutbound) {
+  static bool _supportsVisionFlow({
+    required String? protocol,
+    required String? network,
+    required String? security,
+  }) {
+    return protocol?.trim().toLowerCase() == 'vless' &&
+        network?.trim().toLowerCase() == 'tcp' &&
+        security?.trim().toLowerCase() == 'tls';
+  }
+
+  static bool proxyOutboundSupportsUdp443(
+    Map<String, dynamic> proxyOutbound,
+  ) {
+    if (proxyOutbound['protocol'] != 'vless') return false;
+    final streamSettings = proxyOutbound['streamSettings'] as Map?;
+    if (streamSettings == null) return false;
+    if (!_supportsVisionFlow(
+      protocol: proxyOutbound['protocol'] as String?,
+      network: streamSettings['network'] as String?,
+      security: streamSettings['security'] as String?,
+    )) {
+      return false;
+    }
+    final settings = proxyOutbound['settings'] as Map?;
+    final vnext = settings?['vnext'] as List?;
+    if (vnext == null || vnext.isEmpty) return false;
+    final firstVnext = vnext.first as Map?;
+    final users = firstVnext?['users'] as List?;
+    if (users == null || users.isEmpty) return false;
+    final firstUser = users.first as Map?;
+    final flow = firstUser?['flow'] as String?;
+    return flow?.trim().toLowerCase() == 'xtls-rprx-vision-udp443';
+  }
+
+  static Map<String, dynamic> normalizeProxyOutboundFlow(
+    Map<String, dynamic> proxyOutbound,
+  ) {
     if (proxyOutbound['protocol'] != 'vless') return proxyOutbound;
     final streamSettings = proxyOutbound['streamSettings'] as Map?;
     if (streamSettings == null) return proxyOutbound;
     final network = streamSettings['network'] as String?;
     final security = streamSettings['security'] as String?;
-    
-    // Flow is only valid for tcp + tls (vision)
-    if (network != 'tcp' || security != 'tls') return proxyOutbound;
 
     final settings = proxyOutbound['settings'] as Map?;
     if (settings == null) return proxyOutbound;
@@ -955,6 +1030,15 @@ class VpnConfig {
     if (users == null || users.isEmpty) return proxyOutbound;
 
     final firstUser = users.first as Map;
+    if (!_supportsVisionFlow(
+      protocol: proxyOutbound['protocol'] as String?,
+      network: network,
+      security: security,
+    )) {
+      firstUser.remove('flow');
+      return proxyOutbound;
+    }
+
     final currentFlow = firstUser['flow'] as String?;
 
     final newFlow = DnsConfig.normalizeVisionFlow(currentFlow);

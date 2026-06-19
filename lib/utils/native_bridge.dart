@@ -1012,17 +1012,18 @@ class NativeBridge {
         for (int i = 0; i < outbounds.length; i++) {
           final outbound = outbounds[i];
           if (outbound is Map<String, dynamic> && outbound['tag'] == 'proxy') {
-            final streamSettings = outbound['streamSettings'] as Map?;
-            if (streamSettings != null && streamSettings['network'] == 'tcp' && streamSettings['security'] == 'tls') {
-              proxySupportsUdp443 = true;
-            }
-            outbounds[i] = VpnConfig.normalizeProxyOutboundFlow(outbound);
+            final normalizedOutbound =
+                VpnConfig.normalizeProxyOutboundFlow(outbound);
+            proxySupportsUdp443 =
+                VpnConfig.proxyOutboundSupportsUdp443(normalizedOutbound);
+            outbounds[i] = normalizedOutbound;
             break;
           }
         }
       }
 
-      final effectiveBlockQuic = !GlobalState.http3Passthrough.value || !proxySupportsUdp443;
+      final effectiveBlockQuic =
+          !GlobalState.http3Passthrough.value || !proxySupportsUdp443;
 
       sourceJson['dns'] = VpnConfig.buildSecureDnsConfig();
       sourceJson['routing'] = VpnConfig.buildSecureDnsRoutingConfig(

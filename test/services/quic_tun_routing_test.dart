@@ -11,6 +11,8 @@ const _visionUri =
 const _udp443Uri =
     'vless://11111111-1111-1111-1111-111111111111@example.com:443'
     '?type=tcp&security=tls&flow=xtls-rprx-vision-udp443#example';
+const _xhttpUri = 'vless://11111111-1111-1111-1111-111111111111@example.com:443'
+    '?type=xhttp&security=tls&path=%2Fsplit#example';
 
 Map<String, dynamic> _decode(String value) =>
     jsonDecode(value) as Map<String, dynamic>;
@@ -139,6 +141,18 @@ void main() {
       final text = await VpnConfig.tryGenerateXrayJsonFromVlessUri(_udp443Uri);
       expect(text, isNotNull);
       expect(_proxyFlow(_decode(text!)), 'xtls-rprx-vision');
+    });
+
+    test('removes Vision flow and keeps QUIC blocked for xhttp nodes',
+        () async {
+      GlobalState.http3Passthrough.value = true;
+      final text = await VpnConfig.tryGenerateXrayJsonFromVlessUri(_xhttpUri);
+      expect(text, isNotNull);
+      final config = _decode(text!);
+
+      expect(_proxyFlow(config), isNull);
+      expect(_routingRules(config).where(_isQuicBlock), hasLength(1));
+      expect(_routingRules(config).where(_isProtocolQuicBlock), hasLength(1));
     });
   });
 }
