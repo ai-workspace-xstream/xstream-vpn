@@ -130,8 +130,6 @@ class VpnConfig {
 
   static List<VpnNode> _nodes = [];
 
-
-
   static bool get _requiresServiceDefinition {
     return !(Platform.isIOS || Platform.isAndroid);
   }
@@ -266,7 +264,6 @@ class VpnConfig {
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
     final bundleId = await GlobalApplicationConfig.getBundleId();
@@ -582,6 +579,7 @@ class VpnConfig {
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
           .replaceAll('<UUID>', uuid)
+          .replaceAll('<FLOW>', DnsConfig.normalizeVisionFlow(flow))
           .replaceAll('<INBOUNDS_CONFIG>', inboundsConfig);
 
       final jsonObj = Map<String, dynamic>.from(jsonDecode(replaced));
@@ -643,8 +641,9 @@ class VpnConfig {
       firstVnext['users'] = users;
       firstUser['id'] = uuid;
       firstUser['encryption'] = 'none';
-      if (_hasValue(flow)) {
-        firstUser['flow'] = flow!.trim();
+      final effectiveFlow = DnsConfig.normalizeVisionFlow(flow);
+      if (effectiveFlow.isNotEmpty) {
+        firstUser['flow'] = effectiveFlow;
       } else {
         firstUser.remove('flow');
       }
@@ -689,8 +688,8 @@ class VpnConfig {
         streamSettings['xhttpSettings'] = xhttpSettings;
       }
 
-      jsonObj['dns'] = _buildSecureDnsConfig();
-      jsonObj['routing'] = _buildSecureDnsRoutingConfig(
+      jsonObj['dns'] = buildSecureDnsConfig();
+      jsonObj['routing'] = buildSecureDnsRoutingConfig(
         jsonObj['routing'],
         enableTunnelMode: enableTunnelMode,
       );
@@ -855,7 +854,7 @@ class VpnConfig {
     return '/$normalized';
   }
 
-  static Map<String, dynamic> _buildSecureDnsConfig() {
+  static Map<String, dynamic> buildSecureDnsConfig() {
     final controlPlane = DnsConfig.controlPlane(
       dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
       dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
@@ -881,7 +880,7 @@ class VpnConfig {
         .toList();
   }
 
-  static Map<String, dynamic> _buildSecureDnsRoutingConfig(
+  static Map<String, dynamic> buildSecureDnsRoutingConfig(
     Object? existingRouting, {
     required bool enableTunnelMode,
   }) {
@@ -899,6 +898,7 @@ class VpnConfig {
     );
     final secureDnsRules = controlPlane.routePolicy.buildSecureDnsRules(
       enableTunnelMode: enableTunnelMode,
+      blockQuic: !GlobalState.http3Passthrough.value,
       tunInboundTag: _tunInboundTag,
       directResolverInboundTags: <String>[
         _dnsDirectPrimaryTag,
@@ -916,6 +916,37 @@ class VpnConfig {
       ...existingRules,
     ];
     return routing;
+  }
+
+  static Map<String, dynamic> normalizeProxyOutboundFlow(Map<String, dynamic> proxyOutbound) {
+    if (proxyOutbound['protocol'] != 'vless') return proxyOutbound;
+    final streamSettings = proxyOutbound['streamSettings'] as Map?;
+    if (streamSettings == null) return proxyOutbound;
+    final network = streamSettings['network'] as String?;
+    final security = streamSettings['security'] as String?;
+    
+    // Flow is only valid for tcp + tls (vision)
+    if (network != 'tcp' || security != 'tls') return proxyOutbound;
+
+    final settings = proxyOutbound['settings'] as Map?;
+    if (settings == null) return proxyOutbound;
+    final vnext = settings['vnext'] as List?;
+    if (vnext == null || vnext.isEmpty) return proxyOutbound;
+
+    final firstVnext = vnext.first as Map;
+    final users = firstVnext['users'] as List?;
+    if (users == null || users.isEmpty) return proxyOutbound;
+
+    final firstUser = users.first as Map;
+    final currentFlow = firstUser['flow'] as String?;
+
+    final newFlow = DnsConfig.normalizeVisionFlow(currentFlow);
+    if (newFlow.isNotEmpty) {
+      firstUser['flow'] = newFlow;
+    } else {
+      firstUser.remove('flow');
+    }
+    return proxyOutbound;
   }
 
   /// Generate inbounds configuration based on proxy and tunnel settings

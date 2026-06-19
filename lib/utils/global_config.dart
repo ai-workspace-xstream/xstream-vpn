@@ -61,10 +61,10 @@ final String buildVersion = (() {
 
 /// 基础系统信息，用于匿名统计等场景
 Map<String, String> collectSystemInfo() => {
-  'os': Platform.operatingSystem,
-  'osVersion': Platform.operatingSystemVersion,
-  'dartVersion': Platform.version,
-};
+      'os': Platform.operatingSystem,
+      'osVersion': Platform.operatingSystemVersion,
+      'dartVersion': Platform.version,
+    };
 
 /// 全局应用状态管理（使用 ValueNotifier 实现响应式绑定）
 class GlobalState {
@@ -132,6 +132,11 @@ class GlobalState {
 
   /// HTTP 代理模式开关（默认开启）
   static final ValueNotifier<bool> httpProxyEnabled = ValueNotifier<bool>(true);
+
+  /// HTTP/3 直连隧道开关（默认关闭）
+  static final ValueNotifier<bool> http3Passthrough = ValueNotifier<bool>(
+    false,
+  );
 
   /// 嗅探开关（Sniffing）
   static final ValueNotifier<bool> sniffingEnabled = ValueNotifier<bool>(true);
@@ -228,9 +233,10 @@ class DnsConfig {
   static const _legacyDotEnabledKey = 'tunDnsOverTls';
   static const _fakeDnsEnabledKey = 'fakeDnsEnabled';
   static const _tunnelDnsViaProxyKey = 'tunnelDnsViaProxy';
+  static const _http3PassthroughKey = 'http3Passthrough';
   // Domestic-safe DoH DNS (work in CN, resolve via remote proxy)
-  static const _defaultDohDns1 = 'https://doh.pub/dns-query';        // DNSPod
-  static const _defaultDohDns2 = 'https://dns.alidns.com/dns-query';  // Aliyun
+  static const _defaultDohDns1 = 'https://doh.pub/dns-query'; // DNSPod
+  static const _defaultDohDns2 = 'https://dns.alidns.com/dns-query'; // Aliyun
   static const _defaultPlainDns1 = '1.1.1.1';
   static const _defaultPlainDns2 = '8.8.8.8';
   static const _defaultDirectDns6Servers = <String>[
@@ -300,8 +306,10 @@ class DnsConfig {
   static final ValueNotifier<DnsTransportMode> transportMode =
       ValueNotifier<DnsTransportMode>(DnsTransportMode.doh);
   static final ValueNotifier<bool> fakeDnsEnabled = ValueNotifier<bool>(false);
+
   /// Force tunnel DNS queries through proxy resolver (recommended for CN users)
-  static final ValueNotifier<bool> tunnelDnsViaProxy = ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> tunnelDnsViaProxy =
+      ValueNotifier<bool>(false);
 
   static bool get dohEnabled => transportMode.value == DnsTransportMode.doh;
 
@@ -319,15 +327,13 @@ class DnsConfig {
     return primary ? _defaultPlainDns1 : _defaultPlainDns2;
   }
 
-  static String get proxyPrimaryDefault =>
-      _normalizeProxyEndpoint(
+  static String get proxyPrimaryDefault => _normalizeProxyEndpoint(
         proxyDns1.value,
         transportMode.value,
         primary: true,
       );
 
-  static String get proxySecondaryDefault =>
-      _normalizeProxyEndpoint(
+  static String get proxySecondaryDefault => _normalizeProxyEndpoint(
         proxyDns2.value,
         transportMode.value,
         primary: false,
@@ -367,6 +373,8 @@ class DnsConfig {
       primary: false,
     );
     fakeDnsEnabled.value = prefs.getBool(_fakeDnsEnabledKey) ?? false;
+    GlobalState.http3Passthrough.value =
+        prefs.getBool(_http3PassthroughKey) ?? false;
 
     proxyDns1.addListener(
       () => prefs.setString(_proxyDns1Key, proxyDns1.value),
@@ -385,6 +393,12 @@ class DnsConfig {
     });
     fakeDnsEnabled.addListener(() {
       prefs.setBool(_fakeDnsEnabledKey, fakeDnsEnabled.value);
+    });
+    GlobalState.http3Passthrough.addListener(() {
+      prefs.setBool(
+        _http3PassthroughKey,
+        GlobalState.http3Passthrough.value,
+      );
     });
     tunnelDnsViaProxy.value = prefs.getBool(_tunnelDnsViaProxyKey) ?? false;
     tunnelDnsViaProxy.addListener(() {
@@ -534,9 +548,8 @@ class DnsConfig {
       ),
     ];
 
-    final proxyTransport = dohEnabled
-        ? ResolverTransport.doh
-        : ResolverTransport.plain;
+    final proxyTransport =
+        dohEnabled ? ResolverTransport.doh : ResolverTransport.plain;
     final proxyPolicies = <ResolverServerPolicy>[
       ResolverServerPolicy(
         address: effectiveProxyResolvers.first,
@@ -578,6 +591,28 @@ class DnsConfig {
     );
   }
 
+  static String normalizeVisionFlow(String? rawFlow) {
+    final trimmed = rawFlow?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return GlobalState.http3Passthrough.value
+          ? 'xtls-rprx-vision-udp443'
+          : 'xtls-rprx-vision';
+    }
+
+    final lowered = trimmed.toLowerCase();
+    if (lowered == 'xtls-rprx-vision-udp443') {
+      return GlobalState.http3Passthrough.value
+          ? 'xtls-rprx-vision-udp443'
+          : 'xtls-rprx-vision';
+    }
+    if (lowered == 'xtls-rprx-vision') {
+      return GlobalState.http3Passthrough.value
+          ? 'xtls-rprx-vision-udp443'
+          : 'xtls-rprx-vision';
+    }
+    return trimmed;
+  }
+
   static String _normalizeProxyEndpoint(
     String? rawValue,
     DnsTransportMode mode, {
@@ -592,9 +627,8 @@ class DnsConfig {
     final uri = Uri.tryParse(trimmed);
     if (mode == DnsTransportMode.doh) {
       if (uri != null && uri.hasScheme && uri.scheme == 'https') {
-        final normalizedPath = uri.path.isEmpty || uri.path == '/'
-            ? '/dns-query'
-            : uri.path;
+        final normalizedPath =
+            uri.path.isEmpty || uri.path == '/' ? '/dns-query' : uri.path;
         return uri.replace(path: normalizedPath).toString();
       }
       final host = uri != null && uri.host.isNotEmpty ? uri.host : trimmed;
@@ -890,8 +924,7 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}\\vpn_nodes.json';
 
       case 'linux':
-        final home =
-            Platform.environment['HOME'] ??
+        final home = Platform.environment['HOME'] ??
             (await getApplicationSupportDirectory()).path;
         final xstreamDir = Directory('$home/.config/xstream');
         await xstreamDir.create(recursive: true);

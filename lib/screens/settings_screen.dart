@@ -274,16 +274,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       await VpnConfig.load();
       GlobalState.activeNodeName.value = '';
-      final imported = VpnConfig.nodes
-          .map((e) => e.name)
-          .firstWhere(
-            (name) => !existingNames.contains(name),
-            orElse: () {
-              return VpnConfig.nodes.isNotEmpty
-                  ? VpnConfig.nodes.first.name
-                  : '';
-            },
-          );
+      final imported = VpnConfig.nodes.map((e) => e.name).firstWhere(
+        (name) => !existingNames.contains(name),
+        orElse: () {
+          return VpnConfig.nodes.isNotEmpty ? VpnConfig.nodes.first.name : '';
+        },
+      );
       GlobalState.lastImportedNodeName.value = imported;
       GlobalState.nodeListRevision.value++;
       await _prepareImportedNodeForIos(imported);
@@ -444,10 +440,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     final msg = ok
         ? (enabled
-              ? context.l10n.get('runtimeMcpStarted')
-              : context.l10n.get('runtimeMcpStopped'))
+            ? context.l10n.get('runtimeMcpStarted')
+            : context.l10n.get('runtimeMcpStopped'))
         : (_runtimeMcpService.lastError.value ??
-              context.l10n.get('runtimeMcpToggleFailed'));
+            context.l10n.get('runtimeMcpToggleFailed'));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
@@ -472,8 +468,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       next.remove(value);
     }
-    final changed =
-        next.length != _draftXhttpAlpn.length ||
+    final changed = next.length != _draftXhttpAlpn.length ||
         next.any((item) => !_draftXhttpAlpn.contains(item));
     if (!changed) return;
     setState(() {
@@ -527,7 +522,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 2),
           Text(
             context.l10n.get('xhttpAdvancedHint'),
-            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
           Row(
@@ -595,16 +592,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             children: [
               TextButton(
-                onPressed: _xhttpAdvancedDirty
-                    ? _resetXhttpAdvancedDraft
-                    : null,
+                onPressed:
+                    _xhttpAdvancedDirty ? _resetXhttpAdvancedDraft : null,
                 child: Text(context.l10n.get('xhttpResetDraft')),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: _xhttpAdvancedDirty
-                    ? _saveAndApplyXhttpAdvanced
-                    : null,
+                onPressed:
+                    _xhttpAdvancedDirty ? _saveAndApplyXhttpAdvanced : null,
                 icon: const Icon(Icons.save),
                 label: Text(context.l10n.get('xhttpSaveApply')),
               ),
@@ -638,7 +633,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -656,6 +652,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(context.l10n.get('sniffing')),
                         subtitle: Text(
                           context.l10n.get('sniffingHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.http3Passthrough,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                            () => GlobalState.http3Passthrough.value = value,
+                          );
+                          addAppLog(
+                              'HTTP/3 passthrough: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('http3Passthrough')),
+                        subtitle: Text(
+                          context.l10n.get('http3PassthroughHint'),
                           style: const TextStyle(fontSize: 12),
                         ),
                       );
@@ -736,7 +753,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -789,7 +807,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -828,7 +847,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -919,12 +939,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           builder: (context, loading, ___) {
                             final subtitle = available
                                 ? (running
-                                      ? context.l10n.get(
-                                          'runtimeMcpStatusRunning',
-                                        )
-                                      : context.l10n.get(
-                                          'runtimeMcpStatusStopped',
-                                        ))
+                                    ? context.l10n.get(
+                                        'runtimeMcpStatusRunning',
+                                      )
+                                    : context.l10n.get(
+                                        'runtimeMcpStatusStopped',
+                                      ))
                                 : context.l10n.get(
                                     'runtimeMcpStatusUnavailable',
                                   );
@@ -960,7 +980,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -1020,8 +1041,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
-                   backgroundColor: Theme.of(context).colorScheme.error,
-                   foregroundColor: Theme.of(context).colorScheme.onError,
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -1209,7 +1230,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(left: 16.0, top: 4),
                     child: Text(
                       _formatTunStatusText(context, _tunStatus),
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                   if (_desktopCapabilities.supportsRuntimeMcp)
@@ -1224,12 +1248,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               builder: (context, loading, ___) {
                                 final subtitle = available
                                     ? (running
-                                          ? context.l10n.get(
-                                              'runtimeMcpStatusRunning',
-                                            )
-                                          : context.l10n.get(
-                                              'runtimeMcpStatusStopped',
-                                            ))
+                                        ? context.l10n.get(
+                                            'runtimeMcpStatusRunning',
+                                          )
+                                        : context.l10n.get(
+                                            'runtimeMcpStatusStopped',
+                                          ))
                                     : context.l10n.get(
                                         'runtimeMcpStatusUnavailable',
                                       );
@@ -1352,10 +1376,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   DnsConfig.dohEnabled
                       ? context.l10n.get('dnsDialogHintDoh')
                       : context.l10n.get('dnsDialogHintPlain'),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1428,10 +1450,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 context.l10n.get('dnsDialogHintDirect'),
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: 12),

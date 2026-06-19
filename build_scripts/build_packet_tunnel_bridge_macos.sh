@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euox pipefail
 
 if [[ "${PLATFORM_NAME:-}" != "macosx" ]]; then
   echo "[xray-bridge] skip non-macos platform: ${PLATFORM_NAME:-unknown}"
@@ -55,6 +55,7 @@ echo "[xray-bridge] building for darwin/${ARCH} -> ${TMP_LIB}"
 (
   cd "${GO_CORE_DIR}"
   export CGO_ENABLED=1
+  export GOPROXY=https://goproxy.cn,direct
   export GOOS=darwin
   export GOARCH="${ARCH}"
   export CC="$(xcrun --sdk macosx --find clang)"

@@ -1006,6 +1006,23 @@ class NativeBridge {
       );
       sourceJson['inbounds'] = jsonDecode(newInboundsStr);
 
+      sourceJson['dns'] = VpnConfig.buildSecureDnsConfig();
+      sourceJson['routing'] = VpnConfig.buildSecureDnsRoutingConfig(
+        sourceJson['routing'],
+        enableTunnelMode: isTunMode,
+      );
+
+      final outbounds = sourceJson['outbounds'] as List<dynamic>?;
+      if (outbounds != null) {
+        for (int i = 0; i < outbounds.length; i++) {
+          final outbound = outbounds[i];
+          if (outbound is Map<String, dynamic> && outbound['tag'] == 'proxy') {
+            outbounds[i] = VpnConfig.normalizeProxyOutboundFlow(outbound);
+            break;
+          }
+        }
+      }
+
       final updatedJsonStr = const JsonEncoder.withIndent(
         '  ',
       ).convert(sourceJson);

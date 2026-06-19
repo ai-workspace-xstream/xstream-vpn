@@ -23,7 +23,7 @@ const String defaultXrayJsonTemplate = r'''
               {
                 "id": "<UUID>",
                 "encryption": "none",
-                "flow": "xtls-rprx-vision"
+                "flow": "<FLOW>"
               }
             ]
           }

@@ -108,6 +108,7 @@ class RoutePolicy {
   final List<String> tunnelDnsServers4;
   final List<String> tunnelDnsServers6;
   final bool captureSystemDnsToBuiltInDns;
+
   /// When true, all TUN DNS queries are forced through proxy resolver
   final bool forceTunnelDnsToProxy;
 
@@ -128,6 +129,7 @@ class RoutePolicy {
 
   List<Map<String, dynamic>> buildSecureDnsRules({
     required bool enableTunnelMode,
+    required bool blockQuic,
     required String tunInboundTag,
     required List<String> directResolverInboundTags,
     required List<String> proxyResolverInboundTags,
@@ -150,6 +152,14 @@ class RoutePolicy {
           'network': 'tcp,udp',
           'port': '53',
           'outboundTag': 'proxy',
+        },
+      if (enableTunnelMode && blockQuic)
+        <String, dynamic>{
+          'type': 'field',
+          'inboundTag': <String>[tunInboundTag],
+          'network': 'udp',
+          'port': '443',
+          'outboundTag': 'block',
         },
       if (domainSets.direct.isNotEmpty)
         <String, dynamic>{

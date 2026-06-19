@@ -60,6 +60,9 @@ class AppLocalizations {
       'latency': 'Latency',
       'sniffing': 'Sniffing',
       'sniffingHint': 'Auto-detect traffic protocol',
+      'http3Passthrough': 'HTTP/3 Passthrough',
+      'http3PassthroughHint':
+          'Allows QUIC (UDP 443) to pass through the tunnel so supported nodes can negotiate true HTTP/3. Disable to fall back to the safer H2 path.',
       'fallbackProxy': 'Fallback to Proxy',
       'fallbackProxyHint': 'Route unmatched traffic via proxy',
       'fallbackDomain': 'Fallback to Domain',
@@ -159,11 +162,11 @@ class AppLocalizations {
       'primaryDns': 'Primary DNS',
       'secondaryDns': 'Secondary DNS',
       'tunnelDnsViaProxy': 'Tunnel DNS via Proxy',
-      'tunnelDnsViaProxyHint': 'Forces all TUN DNS queries through proxy resolver. Recommended for CN users when DoH is blocked locally.',
+      'tunnelDnsViaProxyHint':
+          'Forces all TUN DNS queries through proxy resolver. Recommended for CN users when DoH is blocked locally.',
       'dnsDialogHintDoh':
           'Enter DoH HTTPS endpoints. DNSPod / AliDNS are CN-safe.',
-      'dnsDialogHintPlain':
-          'Enter plain DNS server addresses, e.g. 1.1.1.1.',
+      'dnsDialogHintPlain': 'Enter plain DNS server addresses, e.g. 1.1.1.1.',
       'dnsDialogHintDirect':
           'Enter direct DNS server addresses for the Direct Resolver policy and for system DNS override on platforms that do not yet use the local Secure DNS endpoint.',
       'globalProxy': 'Global Proxy',
@@ -321,6 +324,9 @@ curl -I --proxy socks5h://127.0.0.1:1080 --max-time 15 https://grok.com''',
       'latency': '延迟',
       'sniffing': '嗅探',
       'sniffingHint': '自动检测流量协议',
+      'http3Passthrough': 'HTTP/3 透传',
+      'http3PassthroughHint':
+          '允许 QUIC（UDP 443）经隧道转发，让支持的节点协商真正的 HTTP/3；关闭后回退到更稳妥的 H2 路径。',
       'fallbackProxy': '回退到代理',
       'fallbackProxyHint': '将未匹配的流量通过代理转发',
       'fallbackDomain': '回退到域名',
