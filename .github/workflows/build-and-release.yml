@@ -37,6 +37,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: 3.41.4
+  GO_VERSION: "1.26.2"
   XSTREAM_APPLE_TEAM_ID: N3G9T67W78
   XSTREAM_APP_GROUP_ID: group.plus.svc.xstream
   XSTREAM_IOS_BUNDLE_ID: plus.svc.xstream
@@ -147,6 +148,11 @@ jobs:
         uses: ./.github/actions/setup-flutter-sdk
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Set up Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Check Go toolchain
         shell: bash
