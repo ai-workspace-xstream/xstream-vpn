@@ -18,7 +18,7 @@
 		74858FB71ED2DC5600515810 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FB31ED2DC5600515810 /* NativeBridge+XrayInit.swift */; };
 		76AC27D10D29E20D2979088C /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E9E1B996264BE35CF05F8D7 /* NetworkExtension.framework */; };
 		76C0667FC4F674E8E89DBBAA /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83AC0C8AADA5D3FFD50B550A /* Pods_RunnerTests.framework */; };
-		7C41BB83412DF6417AC8964F /* PacketTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9069190494C75AA8FBB3DA08 /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		7C41BB83412DF6417AC8964F /* PacketTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9069190494C75AA8FBB3DA08 /* PacketTunnel.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		83F62DFD02A625DE38DEC3D7 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4668A042DECA7227DC40F27 /* Pods_Runner.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -92,9 +92,9 @@
 		74858FB31ED2DC5600515810 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		83AC0C8AADA5D3FFD50B550A /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8F5C101A4C9A4D8E8B6D0001 /* PacketTunnel-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Debug.xcconfig"; path = Flutter/PacketTunnel-Debug.xcconfig; sourceTree = "<group>"; };
-		8F5C101A4C9A4D8E8B6D0002 /* PacketTunnel-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Release.xcconfig"; path = Flutter/PacketTunnel-Release.xcconfig; sourceTree = "<group>"; };
-		8F5C101A4C9A4D8E8B6D0003 /* PacketTunnel-Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Profile.xcconfig"; path = Flutter/PacketTunnel-Profile.xcconfig; sourceTree = "<group>"; };
+		8F5C101A4C9A4D8E8B6D0001 /* PacketTunnel-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Debug.xcconfig"; path = "Flutter/PacketTunnel-Debug.xcconfig"; sourceTree = "<group>"; };
+		8F5C101A4C9A4D8E8B6D0002 /* PacketTunnel-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Release.xcconfig"; path = "Flutter/PacketTunnel-Release.xcconfig"; sourceTree = "<group>"; };
+		8F5C101A4C9A4D8E8B6D0003 /* PacketTunnel-Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "PacketTunnel-Profile.xcconfig"; path = "Flutter/PacketTunnel-Profile.xcconfig"; sourceTree = "<group>"; };
 		9069190494C75AA8FBB3DA08 /* PacketTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PacketTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
@@ -611,7 +611,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -623,19 +623,20 @@
 		249021D4217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
-				buildSettings = {
-					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-					CLANG_ENABLE_MODULES = YES;
-					CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-					CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					DEVELOPMENT_TEAM = N3G9T67W78;
-					ENABLE_BITCODE = NO;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -658,7 +659,7 @@
 				DEVELOPMENT_TEAM = N3G9T67W78;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-					PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -716,7 +717,7 @@
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -756,7 +757,7 @@
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -829,7 +830,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -880,7 +881,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -894,24 +895,25 @@
 		97C147061CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
-				buildSettings = {
-					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-					CLANG_ENABLE_MODULES = YES;
-					CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-					CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					DEVELOPMENT_TEAM = N3G9T67W78;
-					ENABLE_BITCODE = NO;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-					PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -923,19 +925,20 @@
 		97C147071CF9000F007C117D /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
-				buildSettings = {
-					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-					CLANG_ENABLE_MODULES = YES;
-					CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-					CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					DEVELOPMENT_TEAM = N3G9T67W78;
-					ENABLE_BITCODE = NO;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
 				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -963,7 +966,7 @@
 					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
