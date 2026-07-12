@@ -143,7 +143,7 @@ run_macos_build() {
 
   # Sync Generated.xcconfig so Xcode Archive picks up the correct version from pubspec.yaml.
   echo "Syncing Flutter build config (pubspec.yaml → Generated.xcconfig)..."
-  env "${codesign_env[@]}" "$flutter_bin" build macos --config-only
+  env ${codesign_env[@]+"${codesign_env[@]}"} "$flutter_bin" build macos --config-only
 
   if [[ "${XSTREAM_MACOS_NO_CODESIGN:-0}" == "1" ]]; then
     # `flutter build macos` still enforces provisioning profiles when the Xcode project has manual signing.
@@ -165,7 +165,7 @@ run_macos_build() {
       PROVISIONING_PROFILE_SPECIFIER= \
       PROVISIONING_PROFILE=
   else
-    env "${codesign_env[@]}" "$flutter_bin" build macos --release \
+    env ${codesign_env[@]+"${codesign_env[@]}"} "$flutter_bin" build macos --release \
       "${common_dart_defines[@]}"
   fi
 
