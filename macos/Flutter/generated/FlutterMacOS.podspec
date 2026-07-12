@@ -11,6 +11,6 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'BSD' }
   s.author           = { 'Flutter Dev Team' => 'flutter-dev@googlegroups.com' }
   s.source           = { :git => 'https://github.com/flutter/engine', :tag => s.version.to_s }
-  s.osx.deployment_target = '10.14'
+  s.osx.deployment_target = '12.0'
   s.vendored_frameworks = 'path/to/nothing'
 end

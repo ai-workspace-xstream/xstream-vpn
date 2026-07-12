@@ -17,6 +17,7 @@ help: ## Show this help message
 	@echo "  analyze             Run Flutter static analysis"
 	@echo "  format              Format Dart code"
 	@echo "  clean               Clean build artifacts"
+	@echo "  clean-macos         Clean and regenerate macOS build configs and pods"
 	@echo "  sync-macos-config   Sync pubspec.yaml version to macOS config"
 
 
@@ -86,6 +87,17 @@ sync-macos-config: check-flutter check-macos
 	$(FLUTTER) pub get
 	@cd macos && \
 		$(FLUTTER) build macos --version 2>/dev/null || true
+
+clean-macos: check-flutter check-macos
+	@echo ">>> Cleaning Flutter caches..."
+	$(FLUTTER) clean
+	@echo ">>> Fetching dependencies..."
+	$(FLUTTER) pub get
+	@echo ">>> Regenerating macOS config..."
+	$(FLUTTER) build macos --config-only
+	@echo ">>> Installing CocoaPods..."
+	cd macos && LANG=en_US.UTF-8 pod install
+	@echo ">>> Done. Please open macos/Runner.xcworkspace in Xcode to build."
 
 build-macos-arm64: check-flutter check-macos check-git-submodules
 	@UNAME_S="$(UNAME_S)" UNAME_M="$(UNAME_M)" FLUTTER="$(FLUTTER)" \
