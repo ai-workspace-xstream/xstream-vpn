@@ -10,7 +10,7 @@ UNAME_M="${UNAME_M:-$(uname -m)}"
 GO_BIN="${GO_BIN:-go}"
 
 normalize_exec_path() {
-  local value="$1"
+  local value="${1:-}"
   if [[ -z "$value" || "$value" == "go" ]]; then
     printf '%s' "$value"
     return 0
@@ -25,7 +25,7 @@ normalize_exec_path() {
 }
 
 normalize_path() {
-  local value="$1"
+  local value="${1:-}"
   value="${value//$'\r'/}"
   value="${value//\\:/:}"
   value="${value//\\=/=}"
@@ -34,7 +34,7 @@ normalize_path() {
 }
 
 to_host_path() {
-  local value="$1"
+  local value="${1:-}"
   case "$UNAME_S" in
     MINGW*|MSYS*|CYGWIN*|Windows_NT)
       if command -v cygpath >/dev/null 2>&1; then
@@ -141,9 +141,9 @@ if [[ ! -d "$TOOLCHAIN_BIN" ]]; then
 fi
 
 build_one() {
-  local abi="$1"
-  local goarch="$2"
-  local clang="$3"
+  local abi="${1:-}"
+  local goarch="${2:-}"
+  local clang="${3:-}"
   local goarm="${4:-}"
   local outdir="$JNI_LIBS_DIR/$abi"
   local cc_path="$TOOLCHAIN_BIN/$clang"

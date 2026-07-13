@@ -10,7 +10,7 @@ UNAME_S="${UNAME_S:-$(uname -s)}"
 FLUTTER_BIN="${FLUTTER:-flutter}"
 
 normalize_exec_path() {
-  local value="$1"
+  local value="${1:-}"
   if [[ -z "$value" || "$value" == "flutter" ]]; then
     printf '%s' "$value"
     return 0
