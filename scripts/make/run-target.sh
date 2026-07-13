@@ -27,12 +27,12 @@ common_dart_defines=(
 )
 
 run_macos_build() {
-  local target_arch="$1"
-  local expected_machine="$2"
-  local human_arch="$3"
-  local runtime_arch="$4"
-  local make_target="$5"
-  local skip_msg="$6"
+  local target_arch="${1:-}"
+  local expected_machine="${2:-}"
+  local human_arch="${3:-}"
+  local runtime_arch="${4:-}"
+  local make_target="${5:-}"
+  local skip_msg="${6:-}"
   local codesign_env=()
 
   if [[ "${XSTREAM_MACOS_NO_CODESIGN:-0}" == "1" ]]; then
@@ -199,7 +199,7 @@ run_macos_build() {
 }
 
 run_ios_install() {
-  local mode="$1"
+  local mode="${1:-}"
 
   if [[ "$uname_s" != "Darwin" ]]; then
     echo "iOS install is only supported on macOS"
