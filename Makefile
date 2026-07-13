@@ -1,4 +1,6 @@
-.PHONY: help
+.PHONY: help check-flutter check-go check-macos check-git-submodules \
+	pub-get prepare-macos sync-macos-config clean-macos \
+	build-macos-arm64 build-macos-x64 package-mac
 help: ## Show this help message
 	@echo "XStream VPN Build System"
 	@echo ""
@@ -82,6 +84,14 @@ check-git-submodules:
 pub-get: check-flutter
 	$(FLUTTER) pub get
 
+# Generate Flutter's plugin symlinks before any Xcode/macOS build. Without
+# this dependency Xcode cannot resolve modules such as device_info_plus and
+# shared_preferences_foundation when the build is started from Xcode.
+prepare-macos: pub-get check-macos
+	@echo ">>> Installing macOS CocoaPods dependencies..."
+	@command -v pod >/dev/null 2>&1 || { echo "CocoaPods not found. Install with: brew install cocoapods"; exit 1; }
+	@cd macos && LANG=en_US.UTF-8 pod install
+
 sync-macos-config: check-flutter check-macos
 	@echo ">>> Syncing version $(VERSION)+$(BUILD) to macOS config"
 	$(FLUTTER) pub get
@@ -99,19 +109,19 @@ clean-macos: check-flutter check-macos
 	cd macos && LANG=en_US.UTF-8 pod install
 	@echo ">>> Done. Please open macos/Runner.xcworkspace in Xcode to build."
 
-build-macos-arm64: check-flutter check-macos check-git-submodules
+build-macos-arm64: check-flutter check-macos check-git-submodules prepare-macos
 	@UNAME_S="$(UNAME_S)" UNAME_M="$(UNAME_M)" FLUTTER="$(FLUTTER)" \
 		BRANCH="$(BRANCH)" BUILD_ID="$(BUILD_ID)" BUILD_DATE="$(BUILD_DATE)" \
 		DMG_NAME="$(DMG_NAME)" \
 		"$(RUN_TARGET_SCRIPT)" macos-arm64
 
-build-macos-x64: check-flutter check-macos check-git-submodules
+build-macos-x64: check-flutter check-macos check-git-submodules prepare-macos
 	@UNAME_S="$(UNAME_S)" UNAME_M="$(UNAME_M)" FLUTTER="$(FLUTTER)" \
 		BRANCH="$(BRANCH)" BUILD_ID="$(BUILD_ID)" BUILD_DATE="$(BUILD_DATE)" \
 		DMG_NAME="$(DMG_NAME)" \
 		"$(RUN_TARGET_SCRIPT)" macos-intel
 
-package-mac: check-flutter check-macos check-git-submodules ## Build macOS release + DMG (native arch)
+package-mac: check-flutter check-macos check-git-submodules prepare-macos ## Build macOS release + DMG (native arch)
 	@if [ "$(UNAME_M)" = "arm64" ]; then \
 		$(MAKE) build-macos-arm64; \
 	elif [ "$(UNAME_M)" = "x86_64" ]; then \
