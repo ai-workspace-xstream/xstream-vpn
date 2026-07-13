@@ -174,7 +174,7 @@ clean:
 	rm -rf ios/Flutter/App.framework
 	rm -rf .dart_tool/
 	rm -rf *.lock
-	find . -name "*.g.dart" -delete 2>/dev/null || true
+	find . -name "*.g.dart" ! -path "./lib/app/darwin_host_api.g.dart" -delete 2>/dev/null || true
 	find . -name "*.freezed.dart" -delete 2>/dev/null || true
 
 package-linux-deb:
